@@ -1,0 +1,42 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "declaration": true,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "target": "ES2021",
+    "sourceMap": true,
+    "outDir": "./dist",
+    "baseUrl": "./",
+    "incremental": true,
+    "skipLibCheck": true,
+    "strictNullChecks": false,
+    "noImplicitAny": false,
+    "strictBindCallApply": false,
+    "forceConsistentCasingInFileNames": false,
+    "noFallthroughCasesInSwitch": false,
+    "paths": {
+      "@*": ["*"],
+      "@env": ["env.ts"],
+      "@entities/*": ["entities/*"],
+      "@databases/*": ["databases/*"],
+      "@modules/*": ["modules/*"],
+      "@interfaces/*": ["shared/interfaces/*"],
+      "@guards/*": ["shared/guards/*"],
+      "@filters/*": ["shared/filters/*"],
+      "@middleware/*": ["middleware/*"],
+      "@interceptors/*": ["shared/interceptors/*"],
+      "@decorators/*": ["shared/decorators/*"],
+      "@pipes/*": ["shared/pipes/*"],
+      "@utils": ["utils"],
+      "@common/*": ["common/*"],
+      "@plugins": ["common/plugins"],
+      "@enum/*": ["common/enum/*"],
+      "@exception/*": ["exception/*"],
+      "@shared/*": ["shared/*"],
+      "@logs/*": ["logs/*"]
+    }
+  }
+}
