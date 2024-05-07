@@ -135,10 +135,7 @@ export class AssessmentService {
         if (assesmentUpdate.user.id !== hrid) {
             throw new UnauthorizedException();
         }
-        if (assesmentUpdate.archived) {
-            throw new BadRequestException("Assessment này đã archived!");
-        }
-        return await this.assessmentRepository.update(id, { archived: true })
+        return await this.assessmentRepository.update(id, { archived: !assesmentUpdate.archived })
     }
     getStatusCandidateAssessmentCurrent(user){
         checkCandidate(user);
