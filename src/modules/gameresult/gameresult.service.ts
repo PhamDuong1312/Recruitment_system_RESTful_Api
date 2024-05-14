@@ -98,7 +98,7 @@ export class GameResultService {
                 },
             })
             if(!gameresultHr){
-                throw new BadRequestException("gameresult không tồn tại")
+                throw new BadRequestException("Game chưa bắt đầu")
             }
             if(gameresultHr.status!==StatusGameResultEnum.FINISH){
                 throw new BadRequestException("Game chưa kết thúc")
@@ -113,7 +113,7 @@ export class GameResultService {
             },
         })
         if(!gameresult){
-            throw new BadRequestException("gameresult không tồn tại")
+            throw new BadRequestException("Game chưa bắt đầu")
         }
         if(gameresult.status!==StatusGameResultEnum.FINISH){
             throw new BadRequestException("Game chưa kết thúc")

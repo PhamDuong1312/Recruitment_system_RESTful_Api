@@ -165,7 +165,7 @@ export class AnswerLevelMemoryService {
     }
 
     async exitMemory(gameResult: GameResult,user:any) {
-        const levelIngame=await this.answerLevelMemoryRepository.findOneBy({status:false}) 
+        const levelIngame=await this.answerLevelMemoryRepository.findOneBy({status:false,gameResult:{id:gameResult.id}}) 
         const time_remain = Math.ceil(timeRemainValid(levelIngame.appear_time+levelIngame.res_time, gameResult.time_start))
         if (time_remain <= -10) {
             await this.gameResultRepository.update({ id: gameResult.id }, { status: StatusGameResultEnum.FINISH})
