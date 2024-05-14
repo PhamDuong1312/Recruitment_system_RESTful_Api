@@ -24,7 +24,7 @@ export class AnswerLevelMemoryService {
         let gameresult = await this.gameResultRepository.findOne({
             where: {
                 candidate: { id: user.id },
-                game: { id:game.id },
+                game: { id: game.id },
                 assessment: { id: user.assessmentId }
             }
         })
@@ -39,12 +39,12 @@ export class AnswerLevelMemoryService {
         }
         if (gameresult.status === StatusGameResultEnum.FINISH)
             throw new BadRequestException("Game đã kết thúc")
-        await this.answerLevelMemoryRepository.delete({status:false,gameResult:{id: gameresult.id}})
+        await this.answerLevelMemoryRepository.delete({ status: false, gameResult: { id: gameresult.id } })
         let level = await this.answerLevelMemoryRepository.findOne({
             where: { gameResult: { id: gameresult.id }, status: false },
         });
         if (!level) {
-            const levels = await this.answerLevelMemoryRepository.find({where:{gameResult:{id: gameresult.id}}});
+            const levels = await this.answerLevelMemoryRepository.find({ where: { gameResult: { id: gameresult.id } } });
             level = await this.createPattern(levels.length + 1, gameresult)
         }
         const data = {
@@ -77,30 +77,53 @@ export class AnswerLevelMemoryService {
         return this.answerLevelMemoryRepository.save(patternSave)
     }
 
+    // randomPatternMemory(level: number): string[] {
+    //     const pattern: string[] = []
+    //     for (let i = 0; i < level; i++) {
+    //         const random = Math.round(Math.random())
+    //         if (random) {
+    //             pattern.push("right")
+    //         } else {
+    //             pattern.push("left")
+    //         }
+    //     }
+    //     return pattern
+    // }
+    //sao cho không có quá 4 thằng liên tiếp giống nhau
     randomPatternMemory(level: number): string[] {
         const pattern: string[] = []
-        for (let i = 0; i < level; i++) {
+        while (pattern.length < level) {
+            let status = ""
+            let count = 0
             const random = Math.round(Math.random())
-            if (random) {
-                pattern.push("right")
+            pattern.forEach(pattern => {
+                if (pattern === status) {
+                    count++
+                } else {
+                    count = 1
+                    status = pattern
+                }
+            })
+            if (count < 4) {
+                pattern.push(random ? 'right' : 'left')
             } else {
-                pattern.push("left")
+                pattern.push(status === 'right' ? 'left' : 'right')
             }
         }
         return pattern
     }
 
     async AnswerMemory(gid: number, lid: number, answerDto: AnswerMemoryDto, user: any) {
-        if (!checkPlayer(user)){
-            const gameResultHr = await this.gameResultService.findAndCheckGameHrValid(gid,user.id)
-            return this.Answer(gameResultHr, answerDto,lid,user)
+        if (!checkPlayer(user)) {
+            const gameResultHr = await this.gameResultService.findAndCheckGameHrValid(gid, user.id)
+            return this.Answer(gameResultHr, answerDto, lid, user)
         }
-        await this.userService.findAndCheckAssessmentValid({id:user.assessmentId})
+        await this.userService.findAndCheckAssessmentValid({ id: user.assessmentId })
         const gameResult = await this.gameResultService.findAndCheckGameValid(gid, user.id, user.assessmentId)
-        return this.Answer(gameResult, answerDto,lid,user)
+        return this.Answer(gameResult, answerDto, lid, user)
     }
 
-    async Answer(gameResult: GameResult, answerDto: AnswerMemoryDto, lid: number, user: any){
+    async Answer(gameResult: GameResult, answerDto: AnswerMemoryDto, lid: number, user: any) {
         const levelInGame = (await this.answerLevelMemoryRepository.findOne({
             where: {
                 gameResult: { id: gameResult.id },
@@ -113,25 +136,25 @@ export class AnswerLevelMemoryService {
         if (levelInGame.status) {
             throw new BadRequestException("Bạn đã trả lời câu này")
         }
-        const time_remain = Math.ceil(timeRemainValid(levelInGame.appear_time+levelInGame.res_time, gameResult.time_start))
+        const time_remain = Math.ceil(timeRemainValid(levelInGame.appear_time + levelInGame.res_time, gameResult.time_start))
         if (time_remain <= -10) {
-            await this.gameResultRepository.update({ id: gameResult.id }, { status: StatusGameResultEnum.FINISH})
+            await this.gameResultRepository.update({ id: gameResult.id }, { status: StatusGameResultEnum.FINISH })
             this.userService.changeStatusCandidateAssessment(user)
             throw new BadRequestException("Thời gian trả lời đã kết thúc")
         }
         const pattern = JSON.parse(levelInGame.pattern)
-        const is_correct= pattern.every((item,index) => item===answerDto.answer[index])
-        const answerUpdate={
+        const is_correct = pattern.every((item, index) => item === answerDto.answer[index])
+        const answerUpdate = {
             status: true,
             is_correct,
             answer: JSON.stringify(answerDto.answer),
         }
         const gameResultUpdate = {
-            status:!is_correct||levelInGame.level===gameResult.game.total_question?StatusGameResultEnum.FINISH:StatusGameResultEnum.PLAY,
-            score:is_correct?levelInGame.point:gameResult.score,
-            time_start:new Date()
+            status: !is_correct || levelInGame.level === gameResult.game.total_question ? StatusGameResultEnum.FINISH : StatusGameResultEnum.PLAY,
+            score: is_correct ? levelInGame.point : gameResult.score,
+            time_start: new Date()
         }
-        await this.answerLevelMemoryRepository.update({id:levelInGame.id},answerUpdate)
+        await this.answerLevelMemoryRepository.update({ id: levelInGame.id }, answerUpdate)
         this.gameResultRepository.update({ id: gameResult.id }, gameResultUpdate)
         if (gameResultUpdate.status === StatusGameResultEnum.FINISH) {
             this.userService.changeStatusCandidateAssessment(user)
@@ -142,11 +165,11 @@ export class AnswerLevelMemoryService {
                     gametype: gameResult.game.game_type,
                     score: gameResultUpdate.score,
                     totalQuestions: gameResult.game.total_question
-                }, 
+                },
                 message: "Chúc mừng bạn đã hoàn thành game"
             }
         }
-        const nextlevel =await this.createPattern(levelInGame.level+1,gameResult)
+        const nextlevel = await this.createPattern(levelInGame.level + 1, gameResult)
         const data = {
             level: nextlevel.level,
             res_time: nextlevel.res_time,
@@ -165,23 +188,23 @@ export class AnswerLevelMemoryService {
         }
     }
 
-    async exitMemory(gameResult: GameResult,user:any) {
-        const levelIngame=await this.answerLevelMemoryRepository.findOneBy({status:false,gameResult:{id:gameResult.id}}) 
-        const time_remain = Math.ceil(timeRemainValid(levelIngame.appear_time+levelIngame.res_time, gameResult.time_start))
+    async exitMemory(gameResult: GameResult, user: any) {
+        const levelIngame = await this.answerLevelMemoryRepository.findOneBy({ status: false, gameResult: { id: gameResult.id } })
+        const time_remain = Math.ceil(timeRemainValid(levelIngame.appear_time + levelIngame.res_time, gameResult.time_start))
         if (time_remain <= -10) {
-            await this.gameResultRepository.update({ id: gameResult.id }, { status: StatusGameResultEnum.FINISH})
+            await this.gameResultRepository.update({ id: gameResult.id }, { status: StatusGameResultEnum.FINISH })
             this.userService.changeStatusCandidateAssessment(user)
             throw new BadRequestException("Thời gian chơi đã kết thúc")
         }
-        this.answerLevelMemoryRepository.delete({status:false,gameResult:{id: gameResult.id}})
-        return this.gameResultRepository.update({ id: gameResult.id }, { status: StatusGameResultEnum.PAUSE})
+        this.answerLevelMemoryRepository.delete({ status: false, gameResult: { id: gameResult.id } })
+        return this.gameResultRepository.update({ id: gameResult.id }, { status: StatusGameResultEnum.PAUSE })
     }
 
-    async hrPlayMemory(uid:number, game:Game){
+    async hrPlayMemory(uid: number, game: Game) {
         let gameresult = await this.gameResultRepository.findOne({
             where: {
                 hr: { id: uid },
-                game: { id:game.id },
+                game: { id: game.id },
             }
         })
         if (!gameresult) {
@@ -194,12 +217,12 @@ export class AnswerLevelMemoryService {
         }
         if (gameresult.status === StatusGameResultEnum.FINISH)
             throw new BadRequestException("Game đã kết thúc")
-        await this.answerLevelMemoryRepository.delete({status:false,gameResult:{id: gameresult.id}})
+        await this.answerLevelMemoryRepository.delete({ status: false, gameResult: { id: gameresult.id } })
         let level = await this.answerLevelMemoryRepository.findOne({
             where: { gameResult: { id: gameresult.id }, status: false },
         });
         if (!level) {
-            const levels = await this.answerLevelMemoryRepository.find({where:{gameResult:{id: gameresult.id}}});
+            const levels = await this.answerLevelMemoryRepository.find({ where: { gameResult: { id: gameresult.id } } });
             level = await this.createPattern(levels.length + 1, gameresult)
         }
         const data = {
