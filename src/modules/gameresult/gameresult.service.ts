@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, MethodNotAllowedException, NotFoundException } from "@nestjs/common";
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { RoleEnum } from "src/common/enum/role.enum";
 import { StatusGameResultEnum } from "src/common/enum/statusgame.enum";
@@ -68,7 +68,7 @@ export class GameResultService {
         if (user.role === RoleEnum.ADMIN)
             return data
         if (assessment.user.id !== user.id)
-            throw new MethodNotAllowedException()
+            throw new ForbiddenException("Bạn không thể lấy kết quả của assessment bạn không tạo")
         return data
     }
 
