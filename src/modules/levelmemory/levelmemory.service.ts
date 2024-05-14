@@ -95,6 +95,7 @@ export class AnswerLevelMemoryService {
             const gameResultHr = await this.gameResultService.findAndCheckGameHrValid(gid,user.id)
             return this.Answer(gameResultHr, answerDto,lid,user)
         }
+        await this.userService.findAndCheckAssessmentValid({id:user.assessmentId})
         const gameResult = await this.gameResultService.findAndCheckGameValid(gid, user.id, user.assessmentId)
         return this.Answer(gameResult, answerDto,lid,user)
     }

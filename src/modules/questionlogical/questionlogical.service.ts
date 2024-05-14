@@ -322,6 +322,7 @@ export class QuestionLogicalService {
             const gameResultHr = await this.GameResultService.findAndCheckGameHrValid(gid, user.id)
             return this.Answer(gameResultHr, answerDto, qid, user)
         }
+        await this.UserService.findAndCheckAssessmentValid({id:user.assessmentId})
         const gameResult = await this.GameResultService.findAndCheckGameValid(gid, user.id, user.assessmentId)
         return this.Answer(gameResult, answerDto, qid, user)
     }

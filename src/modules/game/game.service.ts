@@ -99,6 +99,7 @@ export class gameService {
             return this.hrPlayGame(id, user.id)
         }
         //check xem game có trong assement này không
+        await this.UserService.findAndCheckAssessmentValid({id:user.assessmentId})
         const assessmentGame = await this.assessmentGameRepository.findOne({
             where: {
                 game: { id: id },
@@ -127,6 +128,7 @@ export class gameService {
                 return this.LevelMemoryService.exitMemory(gameResultHr, user)
             }
         }
+        await this.UserService.findAndCheckAssessmentValid({id:user.assessmentId})
         const gameResult = await this.gameResultService.findAndCheckGameValid(id, user.id, user.assessmentId)
         if (gameResult.game.game_type === GametypeEnum.LOGICAL) {
             return this.questionLogicalService.exitLogical(gameResult, user)
@@ -144,6 +146,7 @@ export class gameService {
             }
             return this.questionLogicalService.skipQuestion(qid, gameResultHr, user)
         }
+        await this.UserService.findAndCheckAssessmentValid({id:user.assessmentId})
         const gameResult = await this.gameResultService.findAndCheckGameValid(id, user.id, user.assessmentId)
         if (gameResult.game.game_type !== GametypeEnum.LOGICAL) {
             throw new BadRequestException("Chỉ game Logical mới có thể bỏ qua câu hỏi!")
@@ -156,6 +159,7 @@ export class gameService {
             const gameResultHr = await this.gameResultService.findAndCheckGameHrValid(id, user.id);
             return this.UserService.EndGame(user, gameResultHr)
         }
+        await this.UserService.findAndCheckAssessmentValid({id:user.assessmentId})
         const gameResult = await this.gameResultService.findAndCheckGameValid(id, user.id, user.assessmentId)
         return this.UserService.EndGame(user, gameResult)
     }
